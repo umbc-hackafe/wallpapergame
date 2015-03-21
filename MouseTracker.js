@@ -19,6 +19,30 @@ MouseTracker.prototype = {
     preUpdate: function() {
         this.mouseRay.setFromCamera(this.position, game.camera.camera);
         this.intersects = this.mouseRay.intersectObjects(game.scene.children);
+
+        if(this.intersects.length  > 0) {
+            console.log('intersect found');
+            for(var i = 0; i < this.intersects.length; i++) {
+                if(typeof this.intersects[i].object.userData.onmouseover === 'function') {
+                    if(this.intersects[i].object.userData !== this.hovered) {
+                        if(this.hovered !== null) {
+                            this.hovered.onmouseout();
+                        }
+                        this.hovered = this.intersects[i].object.userData;
+                        this.hovered.onmouseover();
+                    }
+                    break;
+                }
+            }
+        }
+        else {
+            if(this.hovered !== null) {
+                this.hovered.onmouseout();
+                this.hovered = null;
+            }
+        }
+
+        console.log(this.hovered);
     },
     postUpdate: function() {
         this.wasLeft = this.left;
