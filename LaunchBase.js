@@ -4,38 +4,37 @@ LaunchBase = function(world, name, lat, lng) {
 
     this.name = name;
 
-    this.material = new THREE.SpriteMaterial({
+    this.geom = new THREE.BoxGeometry(0.125, 0.125, 0.125);
+    this.material = new THREE.MeshBasicMaterial({
         color: 0xff1010,
     });
     this.material.transparent = true;
     this.material.blending = THREE.AdditiveBlending;
 
-    this.sprite = new THREE.Sprite(this.material);
-    this.sprite.matrixAutoUpdate = false;
-    this.sprite.userData = this;
+    this.box = new THREE.Mesh(this.geom, this.material);
+    this.box.matrixAutoUpdate = false;
+    this.box.userData = this;
 
     this.world = world;
     this.angle = new THREE.Vector2(lng, lat);
-    this.surfaceHeight = 0.15;
+    this.surfaceHeight = 0.062;
 
-    this.width = 0.125;
-    this.height = 0.125;
-
-    var scale = new THREE.Matrix4();
     var translate = new THREE.Matrix4();
     var vrot = new THREE.Matrix4();
     var hrot = new THREE.Matrix4();
 
-    scale.makeScale(this.width, this.height, 1);
     translate.makeTranslation(0, 0, world.sphere.radius + this.surfaceHeight);
     vrot.makeRotationX(this.angle.y);
     hrot.makeRotationY(this.angle.x);
-    this.sprite.matrix.makeTranslation(
+    this.box.matrix.makeTranslation(
         world.sphere.center.x, world.sphere.center.y, world.sphere.center.z);
 
-    this.sprite.matrix.multiply(hrot.multiply(vrot.multiply(translate.multiply(scale))));
+    this.box.matrix.multiply(hrot.multiply(vrot.multiply(translate)));
 
-    this.labelOffset = new THREE.Vector2(-0.062, -0.0625);
+    // update for ease of use.
+    this.box.position.setFromMatrixPosition(this.box.matrix);
+
+    this.labelOffset = new THREE.Vector2(-0.062, -0.125);
     this.label = $('<div>', {class: 'label'}).text(this.name).css({
         color: '#ff1010',
         display: 'block',
@@ -49,20 +48,18 @@ LaunchBase.prototype = {
     constructor: LaunchBase,
 
     addTo: function(other) {
-        other.add(this.sprite);
+        other.add(this.box);
         ui.append(this.label);
     },
     removeFrom: function(other) {
-        other.remove(this.sprite);
+        other.remove(this.box);
         this.label.remove();
     },
 
     update: function(dt) {
-        this.sprite.position.setFromMatrixPosition(this.sprite.matrix);
-
         this.visibleRay.ray.origin.copy(game.camera.camera.position);
         this.visibleRay.ray.direction.subVectors(
-            this.sprite.position, game.camera.camera.position);
+            this.box.position, game.camera.camera.position);
 
         var distance = this.visibleRay.ray.direction.length();
 
@@ -70,7 +67,7 @@ LaunchBase.prototype = {
         this.visibleRay.far = distance;
 
         var screenPos = new THREE.Vector3()
-            .copy(this.sprite.position)
+            .copy(this.box.position)
             .add(game.camera.up.clone().multiplyScalar(this.labelOffset.y))
             .add(game.camera.right.clone().multiplyScalar(this.labelOffset.x))
             .project(game.camera.camera);
@@ -89,5 +86,13 @@ LaunchBase.prototype = {
                 display: 'none',
             });
         }
+    },
+
+    onmouseover: function() {
+    },
+    onmouseout: function() {
+    },
+
+    onmouseup: function(event) {
     },
 };

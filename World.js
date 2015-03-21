@@ -49,4 +49,6 @@ World.prototype = {
         this.baseMesh.scale.set(this.sphere.radius, this.sphere.radius, this.sphere.radius);
         this.baseMesh.position.copy(this.sphere.center);
     },
+
+    onmouseover: function() {},
 };

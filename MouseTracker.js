@@ -21,11 +21,10 @@ MouseTracker.prototype = {
         this.intersects = this.mouseRay.intersectObjects(game.scene.children);
 
         if(this.intersects.length  > 0) {
-            console.log('intersect found');
             for(var i = 0; i < this.intersects.length; i++) {
                 if(typeof this.intersects[i].object.userData.onmouseover === 'function') {
                     if(this.intersects[i].object.userData !== this.hovered) {
-                        if(this.hovered !== null) {
+                        if(this.hovered !== null && typeof this.hovered.onmouseout === 'function') {
                             this.hovered.onmouseout();
                         }
                         this.hovered = this.intersects[i].object.userData;
@@ -37,12 +36,10 @@ MouseTracker.prototype = {
         }
         else {
             if(this.hovered !== null) {
-                this.hovered.onmouseout();
+                if(typeof this.hovered.onmouseout === 'function') this.hovered.onmouseout();
                 this.hovered = null;
             }
         }
-
-        console.log(this.hovered);
     },
     postUpdate: function() {
         this.wasLeft = this.left;
@@ -59,10 +56,16 @@ MouseTracker.prototype = {
         if(event.button == 0) this.left = true;
         else if(event.button == 1) this.middle = true;
         else if(event.button == 2) this.right = true;
+        if(this.hovered !== null && typeof this.hovered.onmousedown === 'function') {
+            this.hovered.onmousedown(event);
+        }
     },
     onMouseUp: function(event) {
         if(event.button == 0) this.left = false;
         else if(event.button == 1) this.middle = false;
         else if(event.button == 2) this.right = false;
+        if(this.hovered !== null && typeof this.hovered.onmouseup === 'function') {
+            this.hovered.onmouseup(event);
+        }
     },
 };
