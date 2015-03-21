@@ -1,268 +1,61 @@
 <html>
-  <head>
+<head>
     <title>My first Three.js app</title>
     <style>
-     body { margin: 0; }
-     canvas { width: 100%; height: 100% }
-     #canvas3D { position: absolute; top: 0; left: 0; z-index: 1; }
-     #canvas2D { position: absolute; top: 0; left: 0; z-inxed: 2; background-color: transparent; }
+    body {
+        margin: 0;
+    }
+    canvas {
+        width: 100%;
+        height: 100%;
+    }
+    #canvas3D {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1;
+    }
+    #canvas2D {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-inxed: 2;
+        background-color: transparent;
+    }
+    .covercanvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 3;
+        background-color:
+        transparent;
+        width: 100%;
+        height: 100%;
+    }
     </style>
-  </head>
-  <body>
+</head>
+<body>
+    <div class="covercanvas"></div>
     <canvas id="canvas2D"></canvas>
     <canvas id="canvas3D"></canvas>
     <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js"></script>
+    <script src="/OrbitCamera.js"></script>
+    <script src="/World.js"></script>
+    <script src="/LightRing.js"></script>
+    <script src="/Game.js"></script>
+    <script src="/MouseTracker.js"></script>
+    <script src="/LaunchBase.js"></script>
+    <script src="/main.js"></script>
     <script>
-     function OrbitCamera(distance) {
-       if(typeof distance !== 'number') distance = 10;
-       
-       this.camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 1000);
-       this.camera.userData = this;
-       this.camera.matrixAutoUpdate = false;
 
-       this.angle = new THREE.Vector2(0, 0);
-       this.center = new THREE.Vector3(0, 0, 0);
-       
-       this.distance = distance;
-
-       this.oldNormPos = new THREE.Vector2();
-       this.xRotateScale = 2.5;
-       this.yRotateScale = 2.0;
-     }
-
-     OrbitCamera.prototype.addTo = function(other) {
-       other.add(this.camera);
-     };
-
-     OrbitCamera.prototype.removeFrom = function(other) {
-       other.remove(this.camera);
-     }
-     
-     OrbitCamera.prototype.onResize = function() {
-       this.camera.aspect = window.innerWidth / window.innerHeight;
-       this.camera.updateProjectionMatrix();
-     };
-
-     OrbitCamera.prototype.update = function(dt) {
-       if(mouse.middle) {
-         var diff = new THREE.Vector2();
-         diff.subVectors(mouse.positionNormalized, this.oldNormPos);
-
-         this.angle.x -= diff.x * this.xRotateScale;
-         this.angle.y = THREE.Math.clamp(this.angle.y + diff.y * this.yRotateScale, -.45 * Math.PI, .45 * Math.PI);
-       }
-       this.oldNormPos.copy(mouse.positionNormalized);
-
-       var translate = new THREE.Matrix4();
-       var vrotate = new THREE.Matrix4();
-       var hrotate = new THREE.Matrix4();
-       
-       translate.makeTranslation(0, 0, this.distance);
-       vrotate.makeRotationX(-this.angle.y);
-       hrotate.makeRotationY(this.angle.x);
-       
-       vrotate.multiply(translate);
-       hrotate.multiply(vrotate);
-       
-       this.camera.matrix.makeTranslation(this.center.x, this.center.y, this.center.z);
-       this.camera.matrix.multiply(hrotate);
-       this.camera.position.set(Math.sin(this.angle) * 10, 0, Math.cos(this.angle) * 10);
-       this.camera.rotation.set(0, this.angle, 0);
-       this.camera.updateProjectionMatrix();       
-     };
-
-     function World(center, radius) {
-       if(!radius) radius = 4;
-       if(!center) center = new THREE.Vector3();
-       
-       this.geom = new THREE.IcosahedronGeometry(1, 3);
-       this.material = new THREE.MeshLambertMaterial({
-         color: 0x222e54,//0x121e34,
-         polygonOffset: true,
-         polygonOffsetFactor: 1,
-       });
-
-       this.baseMesh = new THREE.Mesh(this.geom, this.material);
-       this.wireMesh = new THREE.WireframeHelper(this.baseMesh, 0x053630);//0x2a3d5b);
-
-       this.baseMesh.userData = this;
-       this.wireMesh.material.transparent = true;
-       this.wireMesh.material.blending = THREE.AdditiveBlending;
-
-       this.sphere = new THREE.Sphere(center, radius);
-     }
-
-     World.prototype.addTo = function(other) {
-       other.add(this.baseMesh);
-       other.add(this.wireMesh);
-     };
-
-     World.prototype.removeFrom = function(other) {
-       other.remove(this.baseMesh);
-       other.remove(this.wireMesh);
-     };
-
-     World.prototype.update = function(dt) {
-       this.baseMesh.scale.set(this.sphere.radius, this.sphere.radius, this.sphere.radius);
-       this.baseMesh.position.copy(this.sphere.center);
-     };
-
-     function LightRing(numLights, distance, range, inclination, center) {
-       if(typeof numLights !== 'number') numLights = 8;
-       if(typeof distance !== 'number') distance = 7;
-       if(typeof range !== 'number') range = 12;
-       if(typeof inclination !== 'number') inclination = 0.2;
-       if(typeof center === 'undefined') center = new THREE.Vector3();
-       
-       this.range = range;
-       this.distance = distance;
-       this.inclination = inclination;
-       this.center = center;
-
-       this.lights = new Array();
-
-       for(var i = 0; i < numLights; i++) {
-         var light = new THREE.PointLight(0xffffff, 1, range);
-         light.matrixAutoUpdate = false;
-         if(i == 0) {
-           light.userData = this;
-         }
-         this.lights.push(light);
-       }
-       
-       this.needsUpdate = true;
-     }
-
-     LightRing.prototype.update = function(dt) {
-       if(this.needsUpdate) {
-         var translate = new THREE.Matrix4();
-         var vrot = new THREE.Matrix4();
-         var hrot = new THREE.Matrix4();
-         var recenter = new THREE.Matrix4();
-         
-         translate.makeTranslation(0, 0, this.distance);
-         recenter.makeTranslation(this.center.x, this.center.y, this.center.z);
-         
-         for(var i = 0; i < this.lights.length; i++) {
-           var angle = 2 * Math.PI / this.lights.length * i;
-
-           vrot.makeRotationX(Math.sin(angle) * this.inclination);
-           hrot.makeRotationY(angle);
-           
-           vrot.multiply(translate);
-           hrot.multiply(vrot);
-           
-           this.lights[i].matrix.multiplyMatrices(recenter, hrot);
-         }
-       }
-       
-       this.needsUpdate = false;  
-     };
-
-     LightRing.prototype.addTo = function(other) {
-       this.lights.forEach(function(light) {
-         other.add(light);
-       });
-     };
-
-     LightRing.prototype.removeFrom = function(other) {
-       this.lights.forEach(function(light) {
-         other.remove(light);
-       });
-     };
-     
-     function Game(canvas3d) {
-       this.previous_time = 0;
-       
-       this.scene = new THREE.Scene();
-
-       this.renderer = new THREE.WebGLRenderer({
-         antialias: true,
-         maxLights: 8,
-         canvas: canvas3d,
-       });
-       
-       this.camera = new OrbitCamera(10);
-       this.camera.addTo(this.scene);
-
-       this.world = new World();
-       this.world.addTo(this.scene);
-
-       this.lights = new LightRing();
-       this.lights.addTo(this.scene);
-
-       // Calls to setup other things
-       this.onResize();
-     }
-
-     Game.prototype.onResize = function() {
-       this.camera.onResize();
-       this.renderer.setSize(window.innerWidth, window.innerHeight);
-     };
-
-     Game.prototype.step = function(current_time) {
-       var dt = (current_time - this.previous_time) / 1000;
-       this.previous_time = current_time;
-
-       this.scene.traverse(function(obj) {
-         if(typeof obj.userData.update === 'function') {
-           obj.userData.update(dt);
-         }
-       });
-
-       this.renderer.render(this.scene, this.camera.camera);
-     };
-
-     function MouseTracker() {
-       this.left = false;
-       this.right = false;
-       this.middle = false;
-       this.position = new THREE.Vector2();
-       this.positionNormalized = new THREE.Vector2();
-     }
-
-     MouseTracker.prototype.onMouseMove = function(event) {
-       this.position.x = event.clientX;
-       this.position.y = event.clientY;
-       this.positionNormalized.set(this.position.x / window.innerWidth, this.position.y / window.innerHeight);
-     };
-
-     MouseTracker.prototype.onMouseDown = function(event) {
-       if(event.button == 0) this.left = true;
-       else if(event.button == 1) this.middle = true;
-       else if(event.button == 2) this.right = true;
-     };
-
-     MouseTracker.prototype.onMouseUp = function(event) {
-       if(event.button == 0) this.left = false;
-       else if(event.button == 1) this.middle = false;
-       else if(event.button == 2) this.right = false;
-     };
-
-     var game;
-     var mouse;
-     
-     function step(timestamp) {
-       requestAnimationFrame(step);
-       game.step(timestamp);
-     }
-
-     $(document).ready(function() {
-       var canvas3d = $('#canvas3D').get(0);
-       
-       game = new Game(canvas3d);
-       mouse = new MouseTracker();
-
-       requestAnimationFrame(step);
-
-       $(window).resize(function() { game.onResize(); });
-
-       $(document).mousemove(function(event) { mouse.onMouseMove(event); });
-       $(document).mousedown(function(event) { mouse.onMouseDown(event); });
-       $(document).mouseup(function(event) { mouse.onMouseUp(event); });
-       $(document).on('contextmenu', function() { return false; });
-     });
+    var base;
+    $(document).ready(function() {
+        for(var i = 0; i < 10; i++){
+            base = new LaunchBase();
+            base.addTo(game.scene);
+        }
+    });
     </script>
-  </body>
+</body>
 </html>
