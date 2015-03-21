@@ -1,6 +1,10 @@
 var game;
 var mouse;
 
+var ui;
+var canvas2d;
+var canvas3d;
+
 function step(timestamp) {
     requestAnimationFrame(step);
     mouse.preUpdate();
@@ -9,9 +13,11 @@ function step(timestamp) {
 }
 
 $(document).ready(function() {
-    var canvas3d = $('#canvas3D').get(0);
+    ui = $('#ui');
+    canvas2d = $('#canvas2D');
+    canvas3d = $('#canvas3D');
 
-    game = new Game(canvas3d);
+    game = new Game();
     mouse = new MouseTracker();
 
     requestAnimationFrame(step);

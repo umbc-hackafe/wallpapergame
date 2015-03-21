@@ -1,9 +1,22 @@
 <html>
 <head>
-    <title>My first Three.js app</title>
+    <title>Globe Thingy</title>
     <style>
+    @font-face {
+        font-family: 'Droid Sans Mono';
+        src: local('Droid Sans Mono'), url(/DroidSansMono.ttf) format('truetype');
+    }
+
+
     body {
+        font-family: 'Droid Sans Mono';
         margin: 0;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
     }
     canvas {
         width: 100%;
@@ -27,34 +40,35 @@
         top: 0;
         left: 0;
         z-index: 3;
-        background-color:
-        transparent;
+        background-color: transparent;
         width: 100%;
         height: 100%;
+    }
+
+    .label {
+        position: absolute;
+        background-color: transparent;
+        mix-blend-mode: screen;
+        font-size: 12px;
     }
     </style>
 </head>
 <body>
-    <div class="covercanvas"></div>
+    <div id="ui" class="covercanvas"></div>
     <canvas id="canvas2D"></canvas>
     <canvas id="canvas3D"></canvas>
     <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js"></script>
+    <script src="/helpers.js"></script>
     <script src="/OrbitCamera.js"></script>
     <script src="/World.js"></script>
-    <script src="/LightRing.js"></script>
     <script src="/Game.js"></script>
     <script src="/MouseTracker.js"></script>
     <script src="/LaunchBase.js"></script>
     <script src="/main.js"></script>
     <script>
-
-    var base;
     $(document).ready(function() {
-        for(var i = 0; i < 10; i++){
-            base = new LaunchBase();
-            base.addTo(game.scene);
-        }
+
     });
     </script>
 </body>
